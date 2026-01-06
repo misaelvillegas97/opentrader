@@ -1,2 +1,3 @@
 -- AlterTable
-ALTER TABLE "Order" ADD COLUMN "relativePrice" REAL;
+ALTER TABLE "Order"
+  ADD COLUMN "relativePrice" DOUBLE PRECISION;

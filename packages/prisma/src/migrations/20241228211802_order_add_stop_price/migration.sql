@@ -1,2 +1,3 @@
 -- AlterTable
-ALTER TABLE "Order" ADD COLUMN "stopPrice" REAL;
+ALTER TABLE "Order"
+  ADD COLUMN "stopPrice" DOUBLE PRECISION;

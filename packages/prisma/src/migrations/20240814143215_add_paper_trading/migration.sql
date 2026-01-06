@@ -1,46 +1,28 @@
 -- CreateTable
 CREATE TABLE "PaperAsset" (
-    "currency" TEXT NOT NULL PRIMARY KEY,
-    "balance" REAL NOT NULL
+                            "currency" TEXT             NOT NULL,
+                            "balance"  DOUBLE PRECISION NOT NULL,
+
+                            CONSTRAINT "PaperAsset_pkey" PRIMARY KEY ("currency")
 );
 
 -- CreateTable
 CREATE TABLE "PaperOrder" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                            "id"                 SERIAL           NOT NULL,
     "type" TEXT NOT NULL,
     "symbol" TEXT NOT NULL,
     "side" TEXT NOT NULL,
-    "quantity" REAL NOT NULL,
-    "price" REAL,
-    "filledPrice" REAL,
-    "lastTradeTimestamp" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            "quantity"           DOUBLE PRECISION NOT NULL,
+                            "price"              DOUBLE PRECISION,
+                            "filledPrice"        DOUBLE PRECISION,
+                            "lastTradeTimestamp" TIMESTAMP(3)     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "status" TEXT NOT NULL DEFAULT 'open',
-    "fee" REAL NOT NULL DEFAULT 0,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                            "fee"                DOUBLE PRECISION NOT NULL DEFAULT 0,
+                            "createdAt"          TIMESTAMP(3)     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+                            CONSTRAINT "PaperOrder_pkey" PRIMARY KEY ("id")
 );
 
--- RedefineTables
-PRAGMA defer_foreign_keys=ON;
-PRAGMA foreign_keys=OFF;
-CREATE TABLE "new_ExchangeAccount" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "name" TEXT NOT NULL,
-    "label" TEXT,
-    "exchangeCode" TEXT NOT NULL,
-    "apiKey" TEXT NOT NULL,
-    "secretKey" TEXT NOT NULL,
-    "password" TEXT,
-    "isDemoAccount" BOOLEAN NOT NULL DEFAULT false,
-    "isPaperAccount" BOOLEAN NOT NULL DEFAULT false,
-    "ownerId" INTEGER NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
-    "expired" BOOLEAN NOT NULL DEFAULT false,
-    CONSTRAINT "ExchangeAccount_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
-);
-INSERT INTO "new_ExchangeAccount" ("apiKey", "createdAt", "exchangeCode", "expired", "id", "isDemoAccount", "label", "name", "ownerId", "password", "secretKey", "updatedAt") SELECT "apiKey", "createdAt", "exchangeCode", "expired", "id", "isDemoAccount", "label", "name", "ownerId", "password", "secretKey", "updatedAt" FROM "ExchangeAccount";
-DROP TABLE "ExchangeAccount";
-ALTER TABLE "new_ExchangeAccount" RENAME TO "ExchangeAccount";
-CREATE UNIQUE INDEX "ExchangeAccount_label_key" ON "ExchangeAccount"("label");
-PRAGMA foreign_keys=ON;
-PRAGMA defer_foreign_keys=OFF;
+-- AlterTable
+ALTER TABLE "ExchangeAccount"
+  ADD COLUMN "isPaperAccount" BOOLEAN NOT NULL DEFAULT false;

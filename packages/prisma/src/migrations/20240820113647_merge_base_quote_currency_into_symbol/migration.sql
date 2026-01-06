@@ -10,78 +10,40 @@
   - Added the required column `symbol` to the `SmartTrade` table without a default value. This is not possible if the table is not empty.
 
 */
--- RedefineTables
-PRAGMA defer_foreign_keys=ON;
-PRAGMA foreign_keys=OFF;
-CREATE TABLE "new_Bot" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "type" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "label" TEXT,
-    "symbol" TEXT NOT NULL,
-    "enabled" BOOLEAN NOT NULL DEFAULT false,
-    "template" TEXT NOT NULL,
-    "timeframe" TEXT,
-    "processing" BOOLEAN NOT NULL DEFAULT false,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "settings" TEXT NOT NULL,
-    "state" TEXT NOT NULL DEFAULT '{}',
-    "exchangeAccountId" INTEGER NOT NULL,
-    "ownerId" INTEGER NOT NULL,
-    CONSTRAINT "Bot_exchangeAccountId_fkey" FOREIGN KEY ("exchangeAccountId") REFERENCES "ExchangeAccount" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT "Bot_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
-);
-INSERT INTO "new_Bot" ("createdAt", "enabled", "exchangeAccountId", "id", "label", "name", "ownerId", "processing", "settings", "state", "template", "timeframe", "type", "symbol")
-SELECT
-  "createdAt",
-  "enabled",
-  "exchangeAccountId",
-  "id",
-  "label",
-  "name",
-  "ownerId",
-  "processing",
-  "settings",
-  "state",
-  "template",
-  "timeframe",
-  "type",
-  "baseCurrency" || '/' || "quoteCurrency" AS "symbol" -- Construct symbol from baseCurrency and quoteCurrency
-FROM "Bot";
-DROP TABLE "Bot";
-ALTER TABLE "new_Bot" RENAME TO "Bot";
-CREATE UNIQUE INDEX "Bot_label_key" ON "Bot"("label");
-CREATE TABLE "new_SmartTrade" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "type" TEXT NOT NULL,
-    "entryType" TEXT NOT NULL,
-    "takeProfitType" TEXT NOT NULL,
-    "symbol" TEXT NOT NULL,
-    "ref" TEXT,
-    "exchangeAccountId" INTEGER NOT NULL,
-    "botId" INTEGER,
-    "ownerId" INTEGER NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
-    CONSTRAINT "SmartTrade_exchangeAccountId_fkey" FOREIGN KEY ("exchangeAccountId") REFERENCES "ExchangeAccount" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT "SmartTrade_botId_fkey" FOREIGN KEY ("botId") REFERENCES "Bot" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "SmartTrade_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
-);
-INSERT INTO "new_SmartTrade" ("botId", "createdAt", "entryType", "exchangeAccountId", "id", "ownerId", "ref", "takeProfitType", "type", "updatedAt", "symbol")
-SELECT
-  "botId",
-  "createdAt",
-  "entryType",
-  "exchangeAccountId",
-  "id",
-  "ownerId",
-  "ref",
-  "takeProfitType",
-  "type",
-  "updatedAt",
-  "baseCurrency" || '/' || "quoteCurrency" AS "symbol" -- Construct symbol from baseCurrency and quoteCurrency
-FROM "SmartTrade";
-DROP TABLE "SmartTrade";
-ALTER TABLE "new_SmartTrade" RENAME TO "SmartTrade";
-PRAGMA foreign_keys=ON;
-PRAGMA defer_foreign_keys=OFF;
+-- AlterTable Bot: Add symbol column
+ALTER TABLE "Bot"
+  ADD COLUMN "symbol" TEXT;
+
+-- Migrate data: Construct symbol from baseCurrency and quoteCurrency
+UPDATE "Bot"
+SET "symbol" = "baseCurrency" || '/' || "quoteCurrency";
+
+-- Make symbol NOT NULL after data migration
+ALTER TABLE "Bot"
+  ALTER COLUMN "symbol" SET NOT NULL;
+
+-- Drop old columns from Bot
+ALTER TABLE "Bot"
+  DROP COLUMN "baseCurrency";
+ALTER TABLE "Bot"
+  DROP COLUMN "quoteCurrency";
+
+-- AlterTable SmartTrade: Add symbol column
+ALTER TABLE "SmartTrade"
+  ADD COLUMN "symbol" TEXT;
+
+-- Migrate data: Construct symbol from baseCurrency and quoteCurrency
+UPDATE "SmartTrade"
+SET "symbol" = "baseCurrency" || '/' || "quoteCurrency";
+
+-- Make symbol NOT NULL after data migration
+ALTER TABLE "SmartTrade"
+  ALTER COLUMN "symbol" SET NOT NULL;
+
+-- Drop old columns from SmartTrade
+ALTER TABLE "SmartTrade"
+  DROP COLUMN "baseCurrency";
+ALTER TABLE "SmartTrade"
+  DROP COLUMN "quoteCurrency";
+ALTER TABLE "SmartTrade"
+  DROP COLUMN "exchangeSymbolId";

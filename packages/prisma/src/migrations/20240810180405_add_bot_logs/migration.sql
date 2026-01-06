@@ -1,13 +1,18 @@
 -- CreateTable
 CREATE TABLE "BotLog" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                        "id"        SERIAL       NOT NULL,
     "action" TEXT NOT NULL,
     "triggerEventType" TEXT,
     "context" TEXT,
     "error" TEXT,
-    "startedAt" DATETIME NOT NULL,
-    "endedAt" DATETIME NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        "startedAt" TIMESTAMP(3) NOT NULL,
+                        "endedAt"   TIMESTAMP(3) NOT NULL,
+                        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "botId" INTEGER NOT NULL,
-    CONSTRAINT "BotLog_botId_fkey" FOREIGN KEY ("botId") REFERENCES "Bot" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+
+                        CONSTRAINT "BotLog_pkey" PRIMARY KEY ("id")
 );
+
+-- AddForeignKey
+ALTER TABLE "BotLog"
+  ADD CONSTRAINT "BotLog_botId_fkey" FOREIGN KEY ("botId") REFERENCES "Bot" ("id") ON DELETE CASCADE ON UPDATE CASCADE;
