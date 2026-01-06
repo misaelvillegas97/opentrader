@@ -7,3 +7,4 @@ src/client/
 # Generate Zod types
 src/zod/
 
+.env
