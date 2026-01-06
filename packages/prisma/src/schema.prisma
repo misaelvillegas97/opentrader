@@ -235,6 +235,10 @@ model BotLog {
   createdAt        DateTime @default(now())
   bot              Bot      @relation(fields: [botId], references: [id], onDelete: Cascade)
   botId            Int
+
+  // Índices para optimizar consultas de logs por bot
+  @@index([botId, createdAt(sort: Desc)], name: "idx_botlog_bot_created")
+  @@index([botId], name: "idx_botlog_botid")
 }
 
 model Markets {
