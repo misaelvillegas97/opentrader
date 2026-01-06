@@ -17,15 +17,15 @@ generator zod {
   useTypeAssertions = true
 }
 
-// datasource postgres {
-//   provider = "postgresql"
-//   url      = env("DATABASE_URL") // uses connection pooling
-// }
-
-datasource sqlite {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+datasource postgres {
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // uses connection pooling
 }
+
+// datasource sqlite {
+//   provider = "sqlite"
+//   url      = env("DATABASE_URL")
+// }
 
 // enum ExchangeCode {
 //   OKX
