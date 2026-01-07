@@ -41,6 +41,11 @@ export class DeltaCalculator {
     return (count / absDeltas.length) * 100;
   }
 
+  hasSufficientHistory(minSamples: number): boolean {
+    if (this.deltas.length < minSamples) return false;
+    return this.deltas.slice(-minSamples).some((delta) => delta !== 0);
+  }
+
   calculateCVD(): number {
     return this.deltas.reduce((acc, curr) => acc + curr, 0);
   }
