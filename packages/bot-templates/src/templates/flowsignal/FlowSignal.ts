@@ -71,8 +71,12 @@ export function* flowSignal(ctx: TBotContext<FlowSignalParams, FlowSignalState>)
     );
 
     // SessionFilter con tipo correcto (incluye ASIA)
+    const tickSize = params.tickSize ?? RiskConfig.tickSize;
     state.sessionFilter = new SessionFilter(params.sessions ?? FlowSignalConfig.sessions);
-    state.volatilityFilter = new VolatilityFilter(params.minRangeTicks ?? FlowSignalConfig.minRangeTicks);
+    state.volatilityFilter = new VolatilityFilter(
+      params.minRangeTicks ?? FlowSignalConfig.minRangeTicks,
+      tickSize,
+    );
     state.liquidityContext = new LiquidityContext();
     state.entryPlanner = new EntryPlanner();
 
@@ -85,7 +89,7 @@ export function* flowSignal(ctx: TBotContext<FlowSignalParams, FlowSignalState>)
         minRR: params.minRR ?? RiskConfig.minRR,
         targetRR: params.targetRR ?? RiskConfig.targetRR,
         initialCapital: params.initialCapital ?? RiskConfig.initialCapital,
-        tickSize: params.tickSize ?? RiskConfig.tickSize,
+        tickSize,
         maxTradesPerSession: params.maxTradesPerSession ?? RiskConfig.maxTradesPerSession,
         // Parámetros de spread (PRD 4.2)
         maxSpreadTicks: params.maxSpreadTicks ?? RiskConfig.maxSpreadTicks,
@@ -171,6 +175,21 @@ export function* flowSignal(ctx: TBotContext<FlowSignalParams, FlowSignalState>)
   const lastCandle = candles[candles.length - 1];
   const priceChange = lastCandle.close - lastCandle.open;
   const volume = lastCandle.volume || 0;
+  const minDeltaSamples = 10;
+  let effectiveDelta = currentDelta;
+
+  if (!state.deltaCalculator.hasSufficientHistory(minDeltaSamples)) {
+    if (currentDelta === 0) {
+      effectiveDelta = volume * priceChange;
+      logger.info(
+        `[FlowSignal] Delta history insufficient; using candle-based delta ${effectiveDelta.toFixed(2)} for signal detection`,
+      );
+    } else {
+      logger.info(
+        "[FlowSignal] Delta history insufficient; using current candle delta for signal detection",
+      );
+    }
+  }
 
   // Context Filters
   if (!state.sessionFilter.isValid(Date.now())) return;
@@ -179,7 +198,7 @@ export function* flowSignal(ctx: TBotContext<FlowSignalParams, FlowSignalState>)
   // Signal Detection
   const signal = state.signalDetector.detect(
     lastCandle.close,
-    currentDelta,
+    effectiveDelta,
     state.deltaCalculator,
     state.swingDetector,
     volume,
